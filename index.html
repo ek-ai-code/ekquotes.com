@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quote Stories</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400;1,500&family=Jost:wght@300;400&family=Playfair+Display:ital@1&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0d0c;
+    --panel: #171513;
+    --line: #2b2723;
+    --text: #ece5db;
+    --muted: #8f867a;
+    --accent: #c9a87c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Jost", system-ui, sans-serif;
+    font-weight: 300;
+  }
+  header {
+    text-align: center;
+    padding: 64px 16px 28px;
+  }
+  h1 {
+    margin: 0;
+    font-family: "Cormorant Garamond", serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(40px, 7vw, 68px);
+    letter-spacing: 0.01em;
+  }
+  header p {
+    margin: 12px auto 0;
+    max-width: 46ch;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 16px;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  button, .bar input {
+    font: inherit;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: border-color .2s, color .2s, background .2s;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button:focus-visible, .bar input:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+  .bar input {
+    cursor: text;
+    text-transform: none;
+    letter-spacing: 0.04em;
+    width: 190px;
+  }
+  .bar input::placeholder { color: var(--muted); }
+  main {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 34px 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 36px 16px 90px;
+  }
+  .card canvas {
+    display: block;
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    border-radius: 14px;
+    background: var(--panel);
+    box-shadow: 0 18px 40px -18px #000;
+  }
+  .actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .actions button {
+    flex: 1;
+    padding: 8px 4px;
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+  }
+  .actions .save { border-color: var(--accent); color: var(--accent); }
+  .actions .save:hover { background: var(--accent); color: var(--bg); }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 0 16px 48px;
+  }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Quote Stories</h1>
+  <p>Ready-made 1080 × 1920 stories. Swap the photo or the lettering until it feels right, then save.</p>
+</header>
+
+<div class="bar">
+  <button id="shuffle">Shuffle all</button>
+  <input id="handle" type="text" maxlength="40" placeholder="@yourpage (optional)" aria-label="Signature shown under each quote">
+</div>
+
+<main id="grid"></main>
+
+<footer>Photos from <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>, free to use. Double-click a story to rewrite its words.</footer>
+
+<script>
+// ───── Edit freely: one quote per line ─────
+const QUOTES = [
+  "Make something soft in a world that keeps asking you to be hard.",
+  "The blank page is not empty. It is waiting for you.",
+  "Some days the poem is simply that you stayed.",
+  "Paint it anyway. The light will find it.",
+  "You were never behind. You were gathering light.",
+  "Begin badly. Begin anyway.",
+  "There is a colour only you can mix.",
+  "Write the line you once needed to read.",
+  "Let it be messy. Let it be yours.",
+  "Your tenderness is not a flaw in the design. It is the design.",
+  "Not everything has to be finished to be beautiful.",
+  "Be patient with yourself. Even the moon takes its time to be whole.",
+  "Art is how the heart learns to speak out loud.",
+  "Somewhere, someone needs exactly what you are afraid to make.",
+  "Slow art is still art. Slow growth is still growth.",
+  "Keep the small beautiful things. They were always the point.",
+  "What you make with love will outlive the doubt you made it in.",
+  "Let today be a rough sketch of something wonderful.",
+  "A quiet life can still be a work of art.",
+  "Feel it all. Then make something out of it.",
+  "Stay soft. Stay curious. Keep making.",
+  "The world is gentler because you noticed it.",
+  "Bloom at the pace of your own becoming.",
+  "Your hands remember hope, even when you forget.",
+  "Leave a little beauty everywhere you have been.",
+  "You are the poem you keep trying to write.",
+  "Every unfinished thing is still becoming.",
+  "Create like no one is keeping score.",
+  "Turn toward the light, and take your colours with you.",
+  "The poem was in you the whole time.",
+];
+
+// Unsplash photo ids (moody florals, skies, seas, forests, candlelight)
+const PHOTOS = [
+  "1525092853886-07615165c583", "1499381582676-649f710ba3f5", "1719057572864-e61f5204f2ee",
+  "1451550884791-8cc10333cc1c", "1718061474357-1511b1934a17", "1628246075916-fac32db5a1be",
+  "1678806055112-611f7e8f45e2", "1502736842968-bcaab72d0700", "1562622549-f22eac480f17",
+  "1486102515046-44130769cb25", "1612351641432-20a0f196086c", "1562562218-628a3bc92fd0",
+  "1534088568595-a066f410bcda", "1518352724948-729151797553", "1509335803612-fc128367fbe7",
+  "1594652010347-788d009508c3", "1532767153582-b1a0e5145009", "1562881223-9ba9b969166d",
+  "1536195892759-c8a3c8e1945e", "1546979348-7a211780ad7f", "1621451787112-888885307a8c",
+  "1503435980610-a51f3ddfee50", "1729013315108-1ee4f528f84e", "1601922046210-41e129a3e64a",
+  "1537948756265-406a522f1a45", "1649089473160-91a7b1c466d7", "1635865863780-232a23b9d8e0",
+  "1720975555880-6a3eababed1f", "1664876000867-7906debad959", "1653999277784-4e4f27507048",
+  "1698360308488-48a0f089ec3c", "1668189224454-9cce8038cfeb", "1491566102020-21838225c3c8",
+  "1527842891421-42eec6e703ea",
+];
+
+// Sizes are in pixels on the 1080-wide story; everything scales from there.
+const STYLES = [
+  { font: px => `italic 500 ${px}px "Cormorant Garamond"`, size: 90, lh: 1.22, ls: 0,  maxW: 800 },
+  { font: px => `300 ${px}px "Jost"`,                       size: 46, lh: 2.0,  ls: 12, maxW: 800, upper: true },
+  { font: px => `italic 400 ${px}px "Playfair Display"`,    size: 68, lh: 1.38, ls: 0,  maxW: 800 },
+  { font: px => `400 ${px}px "Special Elite"`,              size: 52, lh: 1.7,  ls: 1,  maxW: 780, lower: true },
+];
+
+const W = 1080, H = 1920, PREVIEW_W = 540;
+const photoUrl = (id, w) => `https://images.unsplash.com/photo-${id}?w=${w}&h=${Math.round(w * 16 / 9)}&fit=crop&crop=entropy&q=82&fm=jpg`;
+
+const imgCache = new Map();
+function loadImage(url) {
+  if (!imgCache.has(url)) {
+    imgCache.set(url, new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = () => { imgCache.delete(url); reject(new Error("Photo failed to load")); };
+      img.src = url;
+    }));
+  }
+  return imgCache.get(url);
+}
+
+const grain = (() => {
+  const c = document.createElement("canvas");
+  c.width = c.height = 256;
+  const g = c.getContext("2d"), d = g.createImageData(256, 256);
+  for (let i = 0; i < d.data.length; i += 4) {
+    d.data[i] = d.data[i + 1] = d.data[i + 2] = Math.random() * 255;
+    d.data[i + 3] = 255;
+  }
+  g.putImageData(d, 0, 0);
+  return c;
+})();
+
+function wrap(ctx, text, maxW) {
+  const words = text.split(/\s+/);
+  const greedy = width => {
+    const lines = [];
+    let line = "";
+    for (const word of words) {
+      const next = line ? line + " " + word : word;
+      if (line && ctx.measureText(next).width > width) { lines.push(line); line = word; }
+      else line = next;
+    }
+    if (line) lines.push(line);
+    return lines;
+  };
+  // Narrow the measure while the line count holds, so lines come out even.
+  let best = greedy(maxW);
+  for (let w = maxW * 0.95; w > maxW * 0.45; w -= maxW * 0.05) {
+    const lines = greedy(w);
+    if (lines.length > best.length) break;
+    best = lines;
+  }
+  return best;
+}
+
+function draw(canvas, img, card, handle) {
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width, h = canvas.height, s = w / W;
+
+  if (img) {
+    const k = Math.max(w / img.width, h / img.height);
+    ctx.drawImage(img, (w - img.width * k) / 2, (h - img.height * k) / 2, img.width * k, img.height * k);
+  } else {
+    ctx.fillStyle = "#171513";
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // Mood: overall dim, soft dark pool behind the words, edge vignette, grain.
+  ctx.fillStyle = "rgba(8, 6, 5, 0.30)";
+  ctx.fillRect(0, 0, w, h);
+  const pool = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, h * 0.42);
+  pool.addColorStop(0, "rgba(0, 0, 0, 0.34)");
+  pool.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = pool;
+  ctx.fillRect(0, 0, w, h);
+  const vig = ctx.createRadialGradient(w / 2, h / 2, h * 0.3, w / 2, h / 2, h * 0.72);
+  vig.addColorStop(0, "rgba(0, 0, 0, 0)");
+  vig.addColorStop(1, "rgba(0, 0, 0, 0.5)");
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, w, h);
+  ctx.globalAlpha = 0.07;
+  ctx.globalCompositeOperation = "overlay";
+  ctx.fillStyle = ctx.createPattern(grain, "repeat");
+  ctx.fillRect(0, 0, w, h);
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = "source-over";
+
+  const st = STYLES[card.style];
+  let text = card.quote;
+  if (st.upper) text = text.toUpperCase();
+  if (st.lower) text = text.toLowerCase();
+
+  ctx.font = st.font(st.size * s);
+  ctx.letterSpacing = st.ls * s + "px";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const lines = wrap(ctx, text, st.maxW * s);
+  const lineH = st.size * st.lh * s;
+  const top = h / 2 - (lines.length * lineH) / 2;
+
+  ctx.fillStyle = "rgba(245, 238, 228, 0.75)";
+  ctx.fillRect(w / 2 - 28 * s, top - 62 * s, 56 * s, Math.max(1, 1.5 * s));
+
+  ctx.shadowColor = "rgba(0, 0, 0, 0.55)";
+  ctx.shadowBlur = 26 * s;
+  ctx.shadowOffsetY = 2 * s;
+  ctx.fillStyle = "#f6efe4";
+  lines.forEach((line, i) => ctx.fillText(line, w / 2 + (st.ls * s) / 2, top + lineH * (i + 0.5)));
+
+  if (handle) {
+    ctx.font = `300 ${26 * s}px "Jost"`;
+    ctx.letterSpacing = 7 * s + "px";
+    ctx.fillStyle = "rgba(246, 239, 228, 0.78)";
+    ctx.fillText(handle.toLowerCase(), w / 2 + 3.5 * s, top + lines.length * lineH + 70 * s);
+  }
+  ctx.shadowColor = "transparent";
+  ctx.letterSpacing = "0px";
+}
+
+const grid = document.getElementById("grid");
+const handleInput = document.getElementById("handle");
+try { handleInput.value = localStorage.getItem("quoteStoriesHandle") || ""; } catch {}
+
+const cards = QUOTES.map((quote, i) => ({ quote, photo: i % PHOTOS.length, style: i % STYLES.length }));
+
+async function render(card) {
+  const handle = handleInput.value.trim();
+  const token = card.token = (card.token || 0) + 1;
+  let img = null;
+  try { img = await loadImage(photoUrl(PHOTOS[card.photo], PREVIEW_W)); } catch {}
+  if (card.token === token) draw(card.canvas, img, card, handle);
+}
+
+async function save(card, i, btn) {
+  const label = btn.textContent;
+  btn.textContent = "Saving";
+  try {
+    const img = await loadImage(photoUrl(PHOTOS[card.photo], W));
+    const out = document.createElement("canvas");
+    out.width = W; out.height = H;
+    draw(out, img, card, handleInput.value.trim());
+    const blob = await new Promise(r => out.toBlob(r, "image/jpeg", 0.95));
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `quote-story-${String(i + 1).padStart(2, "0")}.jpg`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    btn.textContent = "Saved";
+  } catch {
+    btn.textContent = "Try again";
+  }
+  setTimeout(() => (btn.textContent = label), 1400);
+}
+
+cards.forEach((card, i) => {
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `<canvas width="${PREVIEW_W}" height="${PREVIEW_W * 16 / 9}" title="Double-click to edit the words"></canvas>
+    <div class="actions"><button>Photo</button><button>Font</button><button class="save">Save</button></div>`;
+  card.canvas = el.querySelector("canvas");
+  const [photoBtn, fontBtn, saveBtn] = el.querySelectorAll("button");
+  photoBtn.onclick = () => { card.photo = (card.photo + 1) % PHOTOS.length; render(card); };
+  fontBtn.onclick = () => { card.style = (card.style + 1) % STYLES.length; render(card); };
+  saveBtn.onclick = () => save(card, i, saveBtn);
+  card.canvas.ondblclick = () => {
+    const next = prompt("Edit the words:", card.quote);
+    if (next && next.trim()) { card.quote = next.trim(); render(card); }
+  };
+  grid.appendChild(el);
+});
+
+document.getElementById("shuffle").onclick = () => {
+  const order = PHOTOS.map((_, i) => i).sort(() => Math.random() - 0.5);
+  cards.forEach((card, i) => {
+    card.photo = order[i % order.length];
+    card.style = Math.floor(Math.random() * STYLES.length);
+    render(card);
+  });
+};
+
+handleInput.oninput = () => {
+  try { localStorage.setItem("quoteStoriesHandle", handleInput.value); } catch {}
+  cards.forEach(render);
+};
+
+const fontsReady = Promise.all(STYLES.map(st => document.fonts.load(st.font(40))).concat(document.fonts.load('300 26px "Jost"')));
+Promise.race([fontsReady, new Promise(r => setTimeout(r, 4000))]).then(() => cards.forEach(render));
+</script>
+</body>
+</html>
